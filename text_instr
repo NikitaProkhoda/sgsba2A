@@ -15,6 +15,9 @@ git remote add origin https://github.com/yourusername/apbd_2a.git
 git push -u origin main
 
 
+dotnet clear
+dotnet build
+
 dotnet ef migrations add Init
 dotnet ef database update
 
