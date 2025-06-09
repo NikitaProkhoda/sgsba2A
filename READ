@@ -1,126 +1,45 @@
-prepare example to test this POST, below is also my class with info, and fix my mistake woth POST - im always getting 400 Erorr (Bad request)
+here is my DTO classes, why do i always have error 400 in POST
+
+namespace Test2C_s31524.DTOs;
+
+public class AddParticipationsDTO
 {
-  "raceName": "string",
-  "trackName": "string",
-  "participations": [
-    {
-      "racerId": 0,
-      "finishTimeInSeconds": 0,
-      "position": 0
-    }
-  ]
+    public string RaceName { get; set; } = null!;
+    public string TrackName { get; set; } = null!;
+    public List<ParticipationInputDTO> Participations { get; set; } = new();
+}
+
+namespace Test2C_s31524.DTOs;
+
+public class ParticipationDetailDTO
+{
+    public string RaceName { get; set; } = null!;
+    public string Location { get; set; } = null!;
+    public DateTime RaceDate { get; set; }
+    public string TrackName { get; set; } = null!;
+    public double TrackLength { get; set; }
+    public int Laps { get; set; }
+    public int FinishTimeInSeconds { get; set; }
+    public int Position { get; set; }
 }
 
 
+namespace Test2C_s31524.DTOs;
 
-using Microsoft.EntityFrameworkCore;
-using Test2C_s31524.Models;
-
-namespace Test2C_s31524.Data;
-
-public class AppDbContext : DbContext
+public class ParticipationInputDTO
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-    public DbSet<Racer> Racers => Set<Racer>();
-    public DbSet<Race> Races => Set<Race>();
-    public DbSet<Track> Tracks => Set<Track>();
-    public DbSet<Participation> Participations => Set<Participation>();
-    public DbSet<TrackRace> TrackRaces => Set<TrackRace>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    modelBuilder.Entity<Racer>().HasData(
-        new Racer { Id = 1, FirstName = "Lewis", LastName = "Hamilton" },
-        new Racer { Id = 2, FirstName = "Max", LastName = "Verstappen" },
-        new Racer { Id = 3, FirstName = "Charles", LastName = "Leclerc" }
-    );
-    
-    modelBuilder.Entity<Track>().HasData(
-        new Track { Id = 1, Name = "Silverstone", LengthInKm = 5.89 },
-        new Track { Id = 2, Name = "Spa-Francorchamps", LengthInKm = 7.00 }
-    );
-    
-    modelBuilder.Entity<Race>().HasData(
-        new Race { Id = 1, Name = "British GP", Location = "UK", Date = new DateTime(2024, 7, 7) },
-        new Race { Id = 2, Name = "Belgian GP", Location = "Belgium", Date = new DateTime(2024, 8, 25) }
-    );
-    
-    modelBuilder.Entity<TrackRace>().HasData(
-        new TrackRace { TrackId = 1, RaceId = 1, BestTimeInSeconds = 90 },
-        new TrackRace { TrackId = 2, RaceId = 2, BestTimeInSeconds = 110 },
-        new TrackRace { TrackId = 1, RaceId = 2, BestTimeInSeconds = 105 }
-    );
-
-    modelBuilder.Entity<Participation>().HasData(
-        new Participation { Id = 1, TrackId = 1, RacerId = 1, RaceId = 1, FinishTimeInSeconds = 4700, Position = 1, Laps = 44 },
-        new Participation { Id = 2, TrackId = 1, RacerId = 2, RaceId = 1, FinishTimeInSeconds = 4720, Position = 2, Laps = 44 },
-        new Participation { Id = 3, TrackId = 2, RacerId = 2, RaceId = 2, FinishTimeInSeconds = 6600, Position = 1, Laps = 40 },
-        new Participation { Id = 4, TrackId = 1, RacerId = 3, RaceId = 2, FinishTimeInSeconds = 4550, Position = 1, Laps = 44 }
-    );
-    
-    modelBuilder.Entity<TrackRace>().HasKey(tr => new { tr.TrackId, tr.RaceId });
-
-    modelBuilder.Entity<TrackRace>()
-        .HasOne(tr => tr.Track)
-        .WithMany(t => t.TrackRaces)
-        .HasForeignKey(tr => tr.TrackId);
-
-    modelBuilder.Entity<TrackRace>()
-        .HasOne(tr => tr.Race)
-        .WithMany(r => r.TrackRaces)
-        .HasForeignKey(tr => tr.RaceId);
-
-    modelBuilder.Entity<Participation>().HasKey(p => new { p.TrackId, p.RacerId, p.RaceId });
-
-    modelBuilder.Entity<Participation>()
-        .HasOne(p => p.Racer)
-        .WithMany(r => r.Participations)
-        .HasForeignKey(p => p.RacerId);
-
-    modelBuilder.Entity<Participation>()
-        .HasOne(p => p.Track)
-        .WithMany(t => t.Participations)
-        .HasForeignKey(p => p.TrackId);
-
-    modelBuilder.Entity<Participation>()
-        .HasOne(p => p.Race)
-        .WithMany(r => r.Participations)
-        .HasForeignKey(p => p.RaceId);
+    public int RacerId { get; set; }
+    public int FinishTimeInSeconds { get; set; }
+    public int Position { get; set; }
 }
 
 
-}
-######
+namespace Test2C_s31524.DTOs;
+
+public class RacerParticipationDTO
 {
-  "raceName": "British GP",
-  "trackName": "Silverstone",
-  "participations": [
-    {
-      "racerId": 1,
-      "finishTimeInSeconds": 4600,
-      "position": 1
-    },
-    {
-      "racerId": 2,
-      "finishTimeInSeconds": 4625,
-      "position": 2
-    }
-  ]
+    public int RacerId { get; set; }
+    public string FirstName { get; set; } = null!;
+    public string LastName { get; set; } = null!;
+    public List<ParticipationDetailDTO> Participations { get; set; } = new();
 }
-💡 Why this works:
-"British GP" and "Silverstone" exist in your seeded data.
-
-Racer IDs 1 and 2 are valid.
-
-This will create participations with the given scores and positions.
-
-Let me know if you want an invalid example too (to test error handling).
-
-
-
-
-
-
-
-
