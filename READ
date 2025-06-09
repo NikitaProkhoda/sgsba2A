@@ -91,3 +91,36 @@ public class AppDbContext : DbContext
 
 
 }
+######
+{
+  "raceName": "British GP",
+  "trackName": "Silverstone",
+  "participations": [
+    {
+      "racerId": 1,
+      "finishTimeInSeconds": 4600,
+      "position": 1
+    },
+    {
+      "racerId": 2,
+      "finishTimeInSeconds": 4625,
+      "position": 2
+    }
+  ]
+}
+💡 Why this works:
+"British GP" and "Silverstone" exist in your seeded data.
+
+Racer IDs 1 and 2 are valid.
+
+This will create participations with the given scores and positions.
+
+Let me know if you want an invalid example too (to test error handling).
+
+
+
+
+
+
+
+
