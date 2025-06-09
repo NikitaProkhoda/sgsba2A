@@ -3,3 +3,219 @@ ok
 delau
 comment prochitay sverhu
 ne pon kakoi
+// Program.cs
+using Microsoft.EntityFrameworkCore;
+using WashingServiceApi.Data;
+using WashingServiceApi.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IWashingService, WashingService>();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
+
+
+// appsettings.json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=WashingDb;Trusted_Connection=True;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}
+
+
+// Models/Client.cs
+namespace WashingServiceApi.Models;
+
+public class Client
+{
+    public int Id { get; set; }
+    public string FirstName { get; set; } = null!;
+    public string LastName { get; set; } = null!;
+
+    public ICollection<Washing> Washings { get; set; }
+}
+
+
+// Models/WashingService.cs
+namespace WashingServiceApi.Models;
+
+public class WashingService
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = null!;
+    public float Price { get; set; }
+
+    public ICollection<Washing> Washings { get; set; }
+}
+
+
+// Models/Washing.cs
+namespace WashingServiceApi.Models;
+
+public class Washing
+{
+    public int Id { get; set; }
+    public DateTime Date { get; set; }
+    public int ClientId { get; set; }
+    public int WashingServiceId { get; set; }
+
+    public Client Client { get; set; }
+    public WashingService WashingService { get; set; }
+}
+
+
+// Data/AppDbContext.cs
+using Microsoft.EntityFrameworkCore;
+using WashingServiceApi.Models;
+
+namespace WashingServiceApi.Data;
+
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {}
+
+    public DbSet<Client> Clients => Set<Client>();
+    public DbSet<WashingService> WashingServices => Set<WashingService>();
+    public DbSet<Washing> Washings => Set<Washing>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Client>().HasData(
+            new Client { Id = 1, FirstName = "Anna", LastName = "Nowak" },
+            new Client { Id = 2, FirstName = "Jan", LastName = "Kowalski" }
+        );
+
+        modelBuilder.Entity<WashingService>().HasData(
+            new WashingService { Id = 1, Name = "Basic", Price = 30 },
+            new WashingService { Id = 2, Name = "Premium", Price = 60 }
+        );
+    }
+}
+
+
+// DTOs/WashingRequestDto.cs
+namespace WashingServiceApi.DTOs;
+
+public class WashingRequestDto
+{
+    public DateTime Date { get; set; }
+    public int ClientId { get; set; }
+    public int WashingServiceId { get; set; }
+}
+
+
+// DTOs/WashingResponseDto.cs
+namespace WashingServiceApi.DTOs;
+
+public class WashingResponseDto
+{
+    public DateTime Date { get; set; }
+    public string ServiceName { get; set; } = null!;
+    public float Price { get; set; }
+}
+
+
+// Services/IWashingService.cs
+using WashingServiceApi.DTOs;
+
+namespace WashingServiceApi.Services;
+
+public interface IWashingService
+{
+    Task<IEnumerable<WashingResponseDto>> GetClientWashingsAsync(int clientId);
+    Task AddWashingAsync(WashingRequestDto dto);
+}
+
+
+// Services/WashingService.cs
+using Microsoft.EntityFrameworkCore;
+using WashingServiceApi.Data;
+using WashingServiceApi.DTOs;
+
+namespace WashingServiceApi.Services;
+
+public class WashingService : IWashingService
+{
+    private readonly AppDbContext _context;
+    public WashingService(AppDbContext context) => _context = context;
+
+    public async Task<IEnumerable<WashingResponseDto>> GetClientWashingsAsync(int clientId)
+    {
+        return await _context.Washings
+            .Include(w => w.WashingService)
+            .Where(w => w.ClientId == clientId)
+            .Select(w => new WashingResponseDto
+            {
+                Date = w.Date,
+                ServiceName = w.WashingService.Name,
+                Price = w.WashingService.Price
+            }).ToListAsync();
+    }
+
+    public async Task AddWashingAsync(WashingRequestDto dto)
+    {
+        var washing = new Models.Washing
+        {
+            Date = dto.Date,
+            ClientId = dto.ClientId,
+            WashingServiceId = dto.WashingServiceId
+        };
+        _context.Washings.Add(washing);
+        await _context.SaveChangesAsync();
+    }
+}
+
+
+// Controllers/WashingController.cs
+using Microsoft.AspNetCore.Mvc;
+using WashingServiceApi.DTOs;
+using WashingServiceApi.Services;
+
+namespace WashingServiceApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class WashingController : ControllerBase
+{
+    private readonly IWashingService _service;
+
+    public WashingController(IWashingService service) => _service = service;
+
+    [HttpGet("{clientId}")]
+    public async Task<IActionResult> GetWashings(int clientId)
+    {
+        var result = await _service.GetClientWashingsAsync(clientId);
+        return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddWashing([FromBody] WashingRequestDto dto)
+    {
+        await _service.AddWashingAsync(dto);
+        return Ok();
+    }
+}
