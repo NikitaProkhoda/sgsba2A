@@ -20,6 +20,7 @@ dotnet build
 
 dotnet ef migrations add Init
 dotnet ef database update
+dotnet ef database drop
 
 Tools → Entity Framework → Add Migration
 Name it Init → press OK
