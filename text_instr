@@ -1,0 +1,47 @@
+dotnet ef migrations add Init
+dotnet ef database update
+
+Tools → Entity Framework → Add Migration
+Name it Init → press OK
+
+Tools → Entity Framework → Update Database
+Select:
+Startup Project: WashingMachineApi (or whatever your main one is)
+DbContext: AppDbContext
+Connection: should match your appsettings.json (e.g. WashingMachineDb)
+
+Open Database tab (right side panel)
+Click ➕ “+” → Data Source → Microsoft SQL Server
+Set:
+  Host: (localdb)\MSSQLLocalDB
+  Database: WashingMachineDb
+  Authentication: Windows / Trusted
+Click Test Connection → then OK ✅
+
+Connection: Server=(localdb)\MSSQLLocalDB;Database=TestDB;Trusted_Connection=True;
+
+
+ Fix: Run your project using Kestrel instead of IIS Express
+Kestrel is the default built-in server for .NET Core and works cross-platform.
+
+🔧 Steps to fix in Rider:
+✅ 1. Edit Run Configuration
+Go to the top toolbar (where the green ▶️ button is)
+Click the dropdown next to the run configuration (probably says Test2A: IIS Express)
+Click Edit Configurations...
+
+✅ 2. Create a new Kestrel profile
+Click + Add New Configuration
+Choose .NET Project
+Name it: Test2A Kestrel
+Set:
+  Project: select your WashingMachineApi.csproj
+  Program arguments: (leave empty)
+  Working directory: should be your project path (Rider fills it in)
+  Check Run browser if you want it to open Swagger automatically
+Click OK
+
+✅ 3. Select and run it
+Back in the top bar:
+  Select the new configuration Test2A Kestrel
+  Hit ▶️ Run
