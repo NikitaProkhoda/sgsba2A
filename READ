@@ -1,2 +1,39 @@
 PS C:\Users\s31524\RiderProjects\Test2C_s31524> dotnet ef database update
 No project was found. Change the current working directory or use the --project option.
+This error means you’re in the wrong directory — dotnet ef can’t find the .csproj file of your project.
+
+⸻
+
+To fix:
+ 1. Navigate into the folder that contains your .csproj file, like this:
+
+cd Test2C_s31524/Test2C_s31524
+
+You can confirm you’re in the right place by running:
+
+dir
+
+and making sure you see something like:
+
+Test2C_s31524.csproj
+Program.cs
+Startup.cs
+...
+
+
+⸻
+
+ 2. Then run the command again:
+
+dotnet ef database update
+
+
+⸻
+
+ Alternatively:
+
+If you don’t want to cd, you can also run it using:
+
+dotnet ef database update --project Test2C_s31524/Test2C_s31524.csproj
+
+Let me know when it’s done — and I’ll guide you with the rest if needed.
