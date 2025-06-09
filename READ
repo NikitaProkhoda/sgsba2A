@@ -23,7 +23,85 @@ public class ParticipationDetailDTO
     public int Position { get; set; }
 }
 
+####
+Thank you for sharing your DTOs — they look perfectly fine by structure. However, if you’re always getting a 400 Bad Request during POST, here are the most common causes and how to fix them:
 
+⸻
+
+ 1. Make sure the controller matches the DTO
+
+Your controller should accept this DTO in the body:
+
+[HttpPost("track-races/participants")]
+public async Task<IActionResult> AddParticipations([FromBody] AddParticipationsDTO dto)
+{
+    // Your service logic here...
+    return Ok();
+}
+
+ IMPORTANT: The [FromBody] attribute must be present for model binding to work correctly for complex types like this one.
+
+⸻
+
+ 2. Make sure the JSON matches the DTO
+
+This is what the JSON for AddParticipationsDTO should look like:
+
+{
+  "raceName": "British GP",
+  "trackName": "Silverstone",
+  "participations": [
+    {
+      "racerId": 1,
+      "finishTimeInSeconds": 4600,
+      "position": 1
+    },
+    {
+      "racerId": 2,
+      "finishTimeInSeconds": 4625,
+      "position": 2
+    }
+  ]
+}
+
+ Every field is case-sensitive. "raceName" ≠ "RaceName" in JSON if you’re not using special naming policies in your app (like camelCase conversion).
+
+⸻
+
+ 3. Check Program.cs for JSON config
+If you want to allow case-insensitive properties (so RaceName and raceName both work), add this to your Program.cs:
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
+
+
+⸻
+
+ 4. Look at the Swagger “Model schema”
+
+In Swagger UI, open your POST endpoint and look at the Schema tab next to the Example Value. If your posted body doesn’t exactly match the schema, you’ll get a 400.
+
+⸻
+
+ 5. Check for validation attributes
+
+If any of your DTOs (or entity models) have attributes like [Required] on any property, and that property is missing or null in JSON, you’ll get a 400.
+
+⸻
+
+ Final checklist:
+ • Does your controller method accept AddParticipationsDTO?
+ • Is [FromBody] used?
+ • Does your posted JSON match the DTO?
+ • Is JSON serialization configured to be case-insensitive if needed?
+ • Are validation attributes causing it to reject your input?
+
+⸻
+
+If you want, I can check the controller or service too. Just send it in and I’ll confirm everything.
 namespace Test2C_s31524.DTOs;
 
 public class ParticipationInputDTO
