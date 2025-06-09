@@ -4,3 +4,32 @@ Possible reasons for this include:
   * You misspelled a built-in dotnet command.
   * You intended to execute a .NET program, but dotnet-ef does not exist.
   * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.
+The error you’re seeing means the dotnet-ef tool (Entity Framework Core CLI) is not installed on your system.
+
+✅ To fix this:
+
+Open Terminal / PowerShell and run:
+
+dotnet tool install --global dotnet-ef
+
+This will install the EF Core CLI globally so you can use dotnet ef commands from anywhere.
+
+⸻
+
+🔄 If you’ve already installed it but it still doesn’t work:
+ 1. Restart Rider (or your terminal).
+ 2. Ensure your PATH environment variable includes the .dotnet/tools directory.
+Typically:
+ • C:\Users\YourUsername\.dotnet\tools (on Windows)
+
+⸻
+
+🔍 You can test it works by running:
+
+dotnet ef --version
+
+Once it’s installed, run your migration command again:
+
+dotnet ef migrations add Init
+
+Let me know if you’d like help creating or applying the database after that.
