@@ -1,4 +1,4 @@
-prepare example to test this POST, below is also my class with info
+prepare example to test this POST, below is also my class with info, and fix my mistake woth POST - im always getting 400 Erorr (Bad request)
 {
   "raceName": "string",
   "trackName": "string",
