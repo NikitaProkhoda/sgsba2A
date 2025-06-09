@@ -1,39 +1,93 @@
-PS C:\Users\s31524\RiderProjects\Test2C_s31524> dotnet ef database update
-No project was found. Change the current working directory or use the --project option.
-This error means you’re in the wrong directory — dotnet ef can’t find the .csproj file of your project.
-
-⸻
-
-To fix:
- 1. Navigate into the folder that contains your .csproj file, like this:
-
-cd Test2C_s31524/Test2C_s31524
-
-You can confirm you’re in the right place by running:
-
-dir
-
-and making sure you see something like:
-
-Test2C_s31524.csproj
-Program.cs
-Startup.cs
-...
+prepare example to test this POST, below is also my class with info
+{
+  "raceName": "string",
+  "trackName": "string",
+  "participations": [
+    {
+      "racerId": 0,
+      "finishTimeInSeconds": 0,
+      "position": 0
+    }
+  ]
+}
 
 
-⸻
 
- 2. Then run the command again:
+using Microsoft.EntityFrameworkCore;
+using Test2C_s31524.Models;
 
-dotnet ef database update
+namespace Test2C_s31524.Data;
+
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    public DbSet<Racer> Racers => Set<Racer>();
+    public DbSet<Race> Races => Set<Race>();
+    public DbSet<Track> Tracks => Set<Track>();
+    public DbSet<Participation> Participations => Set<Participation>();
+    public DbSet<TrackRace> TrackRaces => Set<TrackRace>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Racer>().HasData(
+        new Racer { Id = 1, FirstName = "Lewis", LastName = "Hamilton" },
+        new Racer { Id = 2, FirstName = "Max", LastName = "Verstappen" },
+        new Racer { Id = 3, FirstName = "Charles", LastName = "Leclerc" }
+    );
+    
+    modelBuilder.Entity<Track>().HasData(
+        new Track { Id = 1, Name = "Silverstone", LengthInKm = 5.89 },
+        new Track { Id = 2, Name = "Spa-Francorchamps", LengthInKm = 7.00 }
+    );
+    
+    modelBuilder.Entity<Race>().HasData(
+        new Race { Id = 1, Name = "British GP", Location = "UK", Date = new DateTime(2024, 7, 7) },
+        new Race { Id = 2, Name = "Belgian GP", Location = "Belgium", Date = new DateTime(2024, 8, 25) }
+    );
+    
+    modelBuilder.Entity<TrackRace>().HasData(
+        new TrackRace { TrackId = 1, RaceId = 1, BestTimeInSeconds = 90 },
+        new TrackRace { TrackId = 2, RaceId = 2, BestTimeInSeconds = 110 },
+        new TrackRace { TrackId = 1, RaceId = 2, BestTimeInSeconds = 105 }
+    );
+
+    modelBuilder.Entity<Participation>().HasData(
+        new Participation { Id = 1, TrackId = 1, RacerId = 1, RaceId = 1, FinishTimeInSeconds = 4700, Position = 1, Laps = 44 },
+        new Participation { Id = 2, TrackId = 1, RacerId = 2, RaceId = 1, FinishTimeInSeconds = 4720, Position = 2, Laps = 44 },
+        new Participation { Id = 3, TrackId = 2, RacerId = 2, RaceId = 2, FinishTimeInSeconds = 6600, Position = 1, Laps = 40 },
+        new Participation { Id = 4, TrackId = 1, RacerId = 3, RaceId = 2, FinishTimeInSeconds = 4550, Position = 1, Laps = 44 }
+    );
+    
+    modelBuilder.Entity<TrackRace>().HasKey(tr => new { tr.TrackId, tr.RaceId });
+
+    modelBuilder.Entity<TrackRace>()
+        .HasOne(tr => tr.Track)
+        .WithMany(t => t.TrackRaces)
+        .HasForeignKey(tr => tr.TrackId);
+
+    modelBuilder.Entity<TrackRace>()
+        .HasOne(tr => tr.Race)
+        .WithMany(r => r.TrackRaces)
+        .HasForeignKey(tr => tr.RaceId);
+
+    modelBuilder.Entity<Participation>().HasKey(p => new { p.TrackId, p.RacerId, p.RaceId });
+
+    modelBuilder.Entity<Participation>()
+        .HasOne(p => p.Racer)
+        .WithMany(r => r.Participations)
+        .HasForeignKey(p => p.RacerId);
+
+    modelBuilder.Entity<Participation>()
+        .HasOne(p => p.Track)
+        .WithMany(t => t.Participations)
+        .HasForeignKey(p => p.TrackId);
+
+    modelBuilder.Entity<Participation>()
+        .HasOne(p => p.Race)
+        .WithMany(r => r.Participations)
+        .HasForeignKey(p => p.RaceId);
+}
 
 
-⸻
-
- Alternatively:
-
-If you don’t want to cd, you can also run it using:
-
-dotnet ef database update --project Test2C_s31524/Test2C_s31524.csproj
-
-Let me know when it’s done — and I’ll guide you with the rest if needed.
+}
